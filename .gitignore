@@ -1,0 +1,12 @@
+# Ignore datasets
+datasets/
+*.zip
+*.dcm
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment
+neuroscan-env/
+

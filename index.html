@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroShield AI — Early Alzheimer's Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --void: #04070f;
+    --deep: #070d1a;
+    --surface: #0d1829;
+    --panel: rgba(15,25,50,0.7);
+    --cyan: #3fd0ff;
+    --cyan-glow: #7df9ff;
+    --cyan-dim: rgba(63,208,255,0.12);
+    --ice: #a8eeff;
+    --spark: #ffffff;
+    --text: #d4e8f5;
+    --muted: #4a6a8a;
+    --border: rgba(63,208,255,0.15);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* CUSTOM CURSOR */
+#cursor {
+  position: fixed;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--cyan);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+  box-shadow: 0 0 16px var(--cyan), 0 0 32px rgba(63,208,255,0.4);
+  mix-blend-mode: screen;
+}
+#cursor-trail {
+  position: fixed;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(63,208,255,0.4);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: transform 0.15s ease-out, left 0.12s ease-out, top 0.12s ease-out;
+}
+
+/* THREE.JS CANVAS */
+#brain-canvas {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  z-index: 0;
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 24px 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.4s;
+}
+nav.scrolled {
+  background: rgba(4,7,15,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan);
+  text-shadow: 0 0 24px rgba(63,208,255,0.6);
+  text-decoration: none;
+}
+.nav-links {
+  display: flex;
+  gap: 40px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.3s, text-shadow 0.3s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 1px;
+  background: var(--cyan);
+  transform: scaleX(0);
+  transition: transform 0.3s;
+  transform-origin: left;
+}
+.nav-links a:hover { color: var(--cyan); text-shadow: 0 0 10px rgba(63,208,255,0.5); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-cta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 11px 28px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  background: transparent;
+  cursor: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.nav-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cyan);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+  z-index: -1;
+}
+.nav-cta:hover { color: var(--void); }
+.nav-cta:hover::before { transform: scaleX(1); }
+
+/* HERO */
+#hero {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  overflow: hidden;
+}
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(63,208,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63,208,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+#hero::after {
+  content: '';
+  position: absolute;
+  top: 40%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px; height: 600px;
+  background: radial-gradient(ellipse, rgba(63,208,255,0.07) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+  animation: heroGlow 7s ease-in-out infinite;
+}
+@keyframes heroGlow {
+  0%,100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+}
+#hero > * { position: relative; z-index: 1; }
+
+/* TICKER */
+.ticker-wrap {
+  position: relative;
+  z-index: 1;
+  background: rgba(4,7,15,0.92);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  padding: 11px 0;
+}
+.ticker-inner {
+  display: flex;
+  animation: tickerScroll 28s linear infinite;
+  width: max-content;
+}
+.ticker-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 36px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ticker-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  flex-shrink: 0;
+}
+.ticker-item em { color: var(--cyan); font-style: normal; }
+@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.hero-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  background: var(--cyan-dim);
+  margin-bottom: 36px;
+  opacity: 0;
+  animation: riseIn 1s 0.5s forwards;
+  backdrop-filter: blur(10px);
+}
+
+.hero-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: clamp(4rem, 10vw, 9rem);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  animation: riseIn 1.2s 0.8s forwards;
+  margin-bottom: 8px;
+}
+.hero-title .line1 {
+  display: block;
+  background: linear-gradient(120deg, #ffffff 0%, var(--ice) 50%, var(--cyan-glow) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 60px rgba(63,208,255,0.3));
+}
+.hero-title .line2 {
+  display: block;
+  color: var(--cyan);
+  text-shadow: 0 0 80px rgba(63,208,255,0.4);
+}
+
+.hero-sub {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-top: 20px;
+  margin-bottom: 56px;
+  opacity: 0;
+  animation: riseIn 1s 1.2s forwards;
+  max-width: 500px;
+}
+.hero-sub em { color: var(--cyan); font-style: normal; }
+
+.hero-btns {
+  display: flex;
+  gap: 16px;
+  opacity: 0;
+  animation: riseIn 1s 1.5s forwards;
+}
+.btn-glitch {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--cyan) 0%, #007acc 100%);
+  color: var(--void);
+  border: none;
+  cursor: none;
+  position: relative;
+  overflow: hidden;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 0 40px rgba(63,208,255,0.35);
+}
+.btn-glitch:hover {
+  box-shadow: 0 0 80px rgba(63,208,255,0.6);
+  transform: translateY(-2px);
+}
+.btn-outline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 16px 40px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(180,210,240,0.2);
+  cursor: none;
+  transition: all 0.3s;
+}
+.btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* SCROLL INDICATOR */
+.scroll-ind {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  animation: fadeIn 1s 2.5s forwards;
+}
+.scroll-ind span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.scroll-mouse {
+  width: 22px; height: 36px;
+  border: 1px solid rgba(63,208,255,0.3);
+  border-radius: 11px;
+  position: relative;
+}
+.scroll-wheel {
+  position: absolute;
+  top: 6px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 8px;
+  background: var(--cyan);
+  border-radius: 2px;
+  animation: scrollWheel 2s ease infinite;
+  box-shadow: 0 0 8px var(--cyan);
+}
+@keyframes scrollWheel {
+  0%,100%{ top:6px; opacity:1; }
+  80%{ top:20px; opacity:0; }
+}
+
+/* ─── STATS STRIP ─── */
+.stats-strip {
+  position: relative;
+  z-index: 1;
+  background: rgba(4,7,15,0.85);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(24px);
+  padding: 32px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+}
+.stats-strip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(63,208,255,0.03), transparent);
+  animation: shimmer 4s linear infinite;
+}
+@keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+.stat {
+  flex: 1;
+  text-align: center;
+  padding: 0 40px;
+  border-right: 1px solid var(--border);
+  position: relative;
+  transition: all 0.3s;
+}
+.stat:last-child { border-right: none; }
+.stat::after {
+  content: '';
+  position: absolute;
+  bottom: -28px; left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 40px; height: 2px;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+  transition: transform 0.3s;
+}
+.stat:hover::after { transform: translateX(-50%) scaleX(1); }
+.stat-val {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-shadow: 0 0 40px rgba(63,208,255,0.6), 0 0 80px rgba(63,208,255,0.2);
+  display: block;
+  line-height: 1;
+  transition: text-shadow 0.3s;
+}
+.stat:hover .stat-val {
+  text-shadow: 0 0 60px rgba(63,208,255,0.9), 0 0 100px rgba(63,208,255,0.4);
+}
+.stat-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 8px;
+  display: block;
+}
+
+/* ─── SECTION COMMONS ─── */
+.section-wrap {
+  position: relative;
+  z-index: 1;
+  padding: 120px 80px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.s-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.s-tag::before {
+  content: '';
+  width: 32px; height: 1px;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+.s-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+.s-title .hl { color: var(--cyan); }
+.s-desc {
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 600px;
+  margin-bottom: 64px;
+}
+
+/* REVEAL */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+.reveal-right {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+/* ─── ABOUT / CARDS ─── */
+.cards-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 20px;
+}
+.neuro-card {
+  position: relative;
+  background: rgba(6, 12, 30, 0.88);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  padding: 40px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+.neuro-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.neuro-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(63,208,255,0.05) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.neuro-card:hover { border-color: rgba(63,208,255,0.4); transform: translateY(-4px); box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 40px rgba(63,208,255,0.08); }
+.neuro-card:hover::before { opacity: 1; }
+.neuro-card:hover::after { opacity: 1; }
+.card-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  color: rgba(63,208,255,0.4);
+  margin-bottom: 20px;
+}
+.card-icon-wrap {
+  width: 56px; height: 56px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  position: relative;
+  background: var(--cyan-dim);
+}
+.card-icon-wrap svg { width: 26px; height: 26px; }
+.card-h { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; font-weight: 600; color: var(--text); margin-bottom: 14px; letter-spacing: 0.02em; }
+.card-p { font-size: 0.9rem; line-height: 1.8; color: var(--muted); }
+
+/* WIDE CARD */
+.neuro-card.wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 60px;
+}
+.wide-stat {
+  text-align: right;
+}
+.wide-stat-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 5rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-shadow: 0 0 40px rgba(63,208,255,0.5);
+  line-height: 1;
+  display: block;
+}
+.wide-stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: block;
+  margin-top: 8px;
+}
+
+/* ─── PIPELINE / HOW IT WORKS ─── */
+.pipeline-section {
+  position: relative;
+  z-index: 1;
+  background: radial-gradient(ellipse at 50% 50%, rgba(63,208,255,0.03) 0%, transparent 60%);
+  padding: 120px 0;
+}
+.pipeline-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 80px;
+}
+.pipeline-track {
+  position: relative;
+  margin-top: 70px;
+}
+.track-spine {
+  position: absolute;
+  left: 27px;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--cyan) 0%, rgba(63,208,255,0.1) 100%);
+}
+.track-glow {
+  position: absolute;
+  left: 27px;
+  top: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--cyan-glow), rgba(125,249,255,0.2), transparent);
+  height: 0;
+  animation: spineGrow 3s 0.5s ease-out forwards;
+  box-shadow: 0 0 12px var(--cyan);
+}
+@keyframes spineGrow { to { height: 100%; } }
+.step {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 48px;
+  opacity: 0;
+  transform: translateX(-24px);
+  transition: all 0.6s ease;
+}
+.step.visible { opacity: 1; transform: translateX(0); }
+.step-node {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  display: flex;
+  justify-content: center;
+  padding-top: 22px;
+}
+.step-dot-outer {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--cyan);
+  background: var(--void);
+  box-shadow: 0 0 20px rgba(63,208,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.step-dot-inner {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--cyan-glow);
+  box-shadow: 0 0 8px var(--cyan-glow);
+}
+.step-body {
+  background: rgba(6, 12, 30, 0.88);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 28px 36px;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.step-body::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--cyan), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.step-body:hover { border-color: rgba(63,208,255,0.35); }
+.step-body:hover::before { opacity: 1; }
+.step-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: rgba(63,208,255,0.5);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.step-h { font-family: 'Rajdhani', sans-serif; font-size: 1.15rem; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.step-p { font-size: 0.88rem; line-height: 1.75; color: var(--muted); }
+
+/* ─── AI BRAIN SCAN SECTION ─── */
+.scan-section {
+  position: relative;
+  z-index: 1;
+  padding: 120px 80px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.scan-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+.scan-visual {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 480px;
+}
+.scan-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(63,208,255,0.15);
+  animation: ringPulse 4s ease-in-out infinite;
+}
+.scan-ring:nth-child(2) { inset: 10%; animation-delay: 0.5s; border-color: rgba(63,208,255,0.1); }
+.scan-ring:nth-child(3) { inset: 20%; animation-delay: 1s; border-color: rgba(63,208,255,0.2); }
+@keyframes ringPulse { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.04);opacity:0.4} }
+.scan-center {
+  position: absolute;
+  inset: 15%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(63,208,255,0.08) 0%, rgba(4,7,15,0.9) 60%);
+  border-radius: 50%;
+  border: 1px solid rgba(63,208,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.scan-brain-emoji {
+  font-size: 7rem;
+  filter: hue-rotate(180deg) saturate(0.6);
+  animation: brainPulse 3s ease-in-out infinite;
+  opacity: 0.8;
+}
+@keyframes brainPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+.scan-sweep {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.scan-line-sweep {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
+  animation: sweep 2.5s linear infinite;
+  box-shadow: 0 0 16px var(--cyan-glow), 0 4px 20px rgba(63,208,255,0.3);
+}
+@keyframes sweep { from{top:0} to{top:100%} }
+.scan-data-points {
+  position: absolute;
+  inset: 0;
+}
+.data-dot {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+/* RESULT PANEL */
+.result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: rgba(5, 10, 26, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  padding: 36px 32px;
+}
+.result-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.result-stage {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.r-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  width: 130px;
+  flex-shrink: 0;
+}
+.r-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.r-bar {
+  height: 100%;
+  border-radius: 3px;
+  animation: barAnim 2s ease-out forwards;
+  transform-origin: left;
+}
+@keyframes barAnim { from{width:0!important} }
+.r-bar.safe { background: linear-gradient(90deg,#00b470,#00e88a); box-shadow: 0 0 8px #00b470; }
+.r-bar.mild { background: linear-gradient(90deg,#e0a020,#ffcc44); box-shadow: 0 0 8px #e0a020; }
+.r-bar.warn { background: linear-gradient(90deg,#c03030,#ff4444); box-shadow: 0 0 8px #c03030; }
+.r-bar.cyan { background: linear-gradient(90deg,var(--cyan),var(--cyan-glow)); box-shadow: 0 0 8px var(--cyan); }
+.r-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  width: 38px;
+  text-align: right;
+  color: var(--text);
+}
+
+.diagnosis-box {
+  margin-top: 12px;
+  padding: 24px 28px;
+  border: 1px solid rgba(255,204,68,0.2);
+  background: rgba(255,204,68,0.04);
+  position: relative;
+  overflow: hidden;
+}
+.diagnosis-box::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: #ffcc44;
+  box-shadow: 0 0 12px rgba(255,204,68,0.6);
+}
+.dx-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ffcc44;
+  margin-bottom: 10px;
+}
+.dx-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
+
+/* ─── TECH STACK SECTION ─── */
+.tech-section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 80px;
+  overflow: hidden;
+}
+.tech-section::before {
+  display: none;
+}
+.tech-inner { max-width: 1300px; margin: 0 auto; }
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 60px;
+}
+.tech-pill {
+  background: rgba(5, 10, 26, 0.90);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 32px 20px 28px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+  position: relative;
+  overflow: hidden;
+  cursor: none;
+}
+.tech-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(63,208,255,0.1) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.tech-pill::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s;
+  box-shadow: 0 0 12px var(--cyan);
+}
+.tech-pill:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(63,208,255,0.45);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(63,208,255,0.08);
+}
+.tech-pill:hover::before { opacity: 1; }
+.tech-pill:hover::after { transform: scaleX(1); }
+.tech-pill:hover .tech-icon-wrap { box-shadow: 0 0 30px rgba(63,208,255,0.4); border-color: rgba(63,208,255,0.6); }
+.tech-icon-wrap {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(63,208,255,0.2);
+  background: rgba(63,208,255,0.06);
+  margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.4s;
+}
+.tech-icon { font-size: 1.6rem; display: block; line-height: 1; }
+.tech-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+  letter-spacing: 0.03em;
+}
+.tech-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* ─── CTA SECTION ─── */
+.cta-section {
+  position: relative;
+  z-index: 1;
+  padding: 140px 80px;
+  text-align: center;
+  overflow: hidden;
+}
+.cta-glow-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  border: 1px solid rgba(63,208,255,0.06);
+  pointer-events: none;
+}
+.cta-glow-ring:nth-child(2) { width: 400px; height: 400px; border-color: rgba(63,208,255,0.1); }
+.cta-glow-ring:nth-child(3) { width: 200px; height: 200px; border-color: rgba(63,208,255,0.15); background: radial-gradient(ellipse, rgba(63,208,255,0.05), transparent); }
+.cta-inner { position: relative; z-index: 2; }
+.cta-pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 24px;
+  display: block;
+}
+.cta-headline {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #fff 0%, var(--ice) 60%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 40px rgba(63,208,255,0.25));
+}
+.cta-sub { font-size: 1rem; color: var(--muted); line-height: 1.8; max-width: 480px; margin: 0 auto 48px; }
+.btn-primary-xl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 20px 56px;
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  cursor: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 0 40px rgba(63,208,255,0.2), inset 0 0 40px rgba(63,208,255,0.02);
+}
+.btn-primary-xl::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cyan);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.4s cubic-bezier(0.76,0,0.24,1);
+  z-index: -1;
+}
+.btn-primary-xl:hover { color: var(--void); box-shadow: 0 0 80px rgba(63,208,255,0.5); }
+.btn-primary-xl:hover::before { transform: scaleY(1); }
+
+/* ─── TEAM SECTION ─── */
+.team-section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 80px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 60px;
+}
+.team-card {
+  background: rgba(5, 10, 26, 0.92);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  padding: 44px 28px 36px;
+  text-align: center;
+  transition: all 0.45s cubic-bezier(0.23,1,0.32,1);
+  position: relative;
+  overflow: hidden;
+  cursor: none;
+}
+.team-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.team-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% -20%, rgba(63,208,255,0.07) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.team-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(63,208,255,0.4);
+  box-shadow: 0 28px 80px rgba(0,0,0,0.55), 0 0 50px rgba(63,208,255,0.07);
+}
+.team-card:hover::before { opacity: 1; }
+.team-card:hover::after { opacity: 1; }
+.team-card:hover .t-avatar { animation-duration: 2s; }
+.team-card:hover .t-glow { opacity: 1; transform: scale(1.3); }
+.t-avatar-wrap {
+  position: relative;
+  width: 96px; height: 96px;
+  margin: 0 auto 24px;
+}
+.t-avatar {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: conic-gradient(var(--cyan) 0%, var(--cyan-glow) 25%, rgba(63,208,255,0.15) 50%, var(--cyan-glow) 75%, var(--cyan) 100%);
+  padding: 2px;
+  animation: rotateConic 6s linear infinite;
+}
+@keyframes rotateConic { to { transform: rotate(360deg); } }
+.t-glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(63,208,255,0.18) 0%, transparent 70%);
+  opacity: 0;
+  transition: all 0.4s;
+  pointer-events: none;
+}
+.t-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+}
+.t-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+}
+.t-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 16px;
+}
+.t-divider {
+  width: 32px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  margin: 0 auto 14px;
+  opacity: 0.5;
+}
+.t-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ─── FOOTER ─── */
+footer {
+  position: relative;
+  z-index: 1;
+  padding: 48px 80px;
+  border-top: 1px solid var(--border);
+  background: rgba(4,7,15,0.95);
+  backdrop-filter: blur(24px);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+}
+.f-logo { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.2rem; letter-spacing: 0.15em; color: var(--cyan); text-shadow: 0 0 20px rgba(63,208,255,0.4); }
+.f-center { text-align: center; }
+.f-copy { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+.f-right { text-align: right; font-size: 0.82rem; color: var(--muted); font-style: italic; }
+
+/* ─── SECTION DIVIDER ─── */
+.s-divider {
+  position: relative;
+  z-index: 1;
+  height: 1px;
+  margin: 0 80px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+/* PARTICLES OVERLAY */
+#particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: var(--cyan);
+  opacity: 0;
+  animation: particleFly linear infinite;
+  box-shadow: 0 0 6px var(--cyan);
+}
+@keyframes particleFly {
+  0% { transform: translateY(0) scale(0); opacity: 0; }
+  10% { opacity: 0.6; transform: translateY(-20px) scale(1); }
+  90% { opacity: 0.2; }
+  100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+}
+
+/* ─── KEYFRAMES ─── */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn { to { opacity: 1; } }
+
+/* ─── GLOBAL CONTENT READABILITY LAYER ─── */
+/* Dark vignette overlay between canvas and content */
+#page-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(4, 7, 15, 0.52);
+}
+
+/* Section backgrounds — direct, no pseudo-element conflicts */
+.section-wrap {
+  background: rgba(4, 7, 18, 0.70);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.pipeline-section {
+  background: rgba(3, 6, 16, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.scan-section {
+  background: rgba(4, 7, 18, 0.70);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.tech-section {
+  background: rgba(3, 6, 16, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.team-section {
+  background: rgba(4, 7, 18, 0.70);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.cta-section {
+  background: rgba(3, 6, 16, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Stats strip and ticker keep their solid backing */
+.stats-strip, .ticker-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  nav { padding: 18px 24px; }
+  .nav-links { display: none; }
+  .section-wrap, .scan-section, .tech-section, .cta-section, .team-section { padding: 80px 24px; }
+  .cards-layout { grid-template-columns: 1fr; }
+  .neuro-card.wide { grid-template-columns: 1fr; gap: 20px; }
+  .wide-stat { text-align: left; }
+  .scan-layout { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: repeat(2, 1fr); }
+  .team-grid { grid-template-columns: repeat(2, 1fr); }
+  footer { grid-template-columns: 1fr; text-align: center; padding: 40px 24px; }
+  .f-right { text-align: center; }
+  .pipeline-inner { padding: 0 24px; }
+  .stats-strip { flex-wrap: wrap; gap: 0; }
+  .stat { min-width: 50%; border-bottom: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- Three.js canvas -->
+<canvas id="brain-canvas"></canvas>
+
+<!-- Dark vignette between canvas and content -->
+<div id="page-veil"></div>
+
+<!-- Floating particles -->
+<div id="particles"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#">NEUROSHIELD AI</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#how-it-works">Pipeline</a></li>
+    <li><a href="#scan-demo">Detection</a></li>
+    <li><a href="#team">Team</a></li>
+  </ul>
+  <button class="nav-cta">Request Access</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-badge">// AI-Powered Neuroimaging — Early Detection Platform</div>
+  <h1 class="hero-title">
+    <span class="line1">NeuroShield</span>
+    <span class="line2">AI</span>
+  </h1>
+  <p class="hero-sub">Early <em>Alzheimer's Detection</em> using deep learning on MRI scans — giving neurologists the clarity to act before symptoms emerge.</p>
+  <div class="hero-btns">
+    <button class="btn-glitch">Scan the Future</button>
+    <button class="btn-outline">Explore Platform</button>
+  </div>
+  <div class="scroll-ind">
+    <span>Navigate deeper</span>
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <div class="ticker-item"><span class="ticker-dot"></span> AI-Powered <em>Alzheimer's Detection</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> <em>96.4%</em> Classification Accuracy</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> <em>55 Million</em> People Affected Globally</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Analysis in <em>Under 3 Seconds</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> <em>4 Stage</em> Alzheimer's Classification</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> ResNet50 + EfficientNet <em>Ensemble</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> HIPAA-Compliant <em>Medical Platform</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Grad-CAM <em>Explainability</em> Reports</div>
+    <!-- duplicate for seamless loop -->
+    <div class="ticker-item"><span class="ticker-dot"></span> AI-Powered <em>Alzheimer's Detection</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> <em>96.4%</em> Classification Accuracy</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> <em>55 Million</em> People Affected Globally</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Analysis in <em>Under 3 Seconds</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> <em>4 Stage</em> Alzheimer's Classification</div>
+    <div class="ticker-item"><span class="ticker-dot"></span> ResNet50 + EfficientNet <em>Ensemble</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> HIPAA-Compliant <em>Medical Platform</em></div>
+    <div class="ticker-item"><span class="ticker-dot"></span> Grad-CAM <em>Explainability</em> Reports</div>
+  </div>
+</div>
+
+<!-- STATS STRIP -->
+<div class="stats-strip section-glass">
+  <div class="stat reveal">
+    <span class="stat-val">96.4%</span>
+    <span class="stat-key">Detection Accuracy</span>
+  </div>
+  <div class="stat reveal" style="transition-delay:0.1s">
+    <span class="stat-val">55M+</span>
+    <span class="stat-key">Affected Globally</span>
+  </div>
+  <div class="stat reveal" style="transition-delay:0.2s">
+    <span class="stat-val">&lt;3s</span>
+    <span class="stat-key">Analysis Time</span>
+  </div>
+  <div class="stat reveal" style="transition-delay:0.3s">
+    <span class="stat-val">4</span>
+    <span class="stat-key">Disease Stages</span>
+  </div>
+</div>
+
+<!-- ABOUT SECTION -->
+<div id="about" class="section-wrap">
+  <div class="reveal">
+    <div class="s-tag">01 — Understanding the Disease</div>
+    <h2 class="s-title">What is <span class="hl">Alzheimer's</span> Disease?</h2>
+    <p class="s-desc">A progressive neurological disorder causing brain cells to degenerate — the leading cause of dementia, affecting memory, cognition, and behavior at global scale.</p>
+  </div>
+
+  <div class="cards-layout">
+    <div class="neuro-card reveal" style="transition-delay:0.1s">
+      <div class="card-num">// 01</div>
+      <div class="card-icon-wrap">
+        <svg viewBox="0 0 26 26" fill="none" stroke="#3fd0ff" stroke-width="1.5">
+          <ellipse cx="13" cy="13" rx="8" ry="10"/>
+          <path d="M13 6 C10 8, 8 10, 9 13 C10 16, 13 17, 13 20"/>
+          <path d="M13 6 C16 8, 18 10, 17 13 C16 16, 13 17, 13 20"/>
+          <circle cx="9" cy="10" r="1.5" fill="#3fd0ff"/>
+          <circle cx="17" cy="10" r="1.5" fill="#3fd0ff"/>
+        </svg>
+      </div>
+      <h3 class="card-h">The Disease Mechanism</h3>
+      <p class="card-p">Alzheimer's causes progressive accumulation of amyloid plaques and tau tangles in the brain, disrupting neural signaling pathways and leading to irreversible cognitive decline over time.</p>
+    </div>
+
+    <div class="neuro-card reveal" style="transition-delay:0.2s">
+      <div class="card-num">// 02</div>
+      <div class="card-icon-wrap">
+        <svg viewBox="0 0 26 26" fill="none" stroke="#3fd0ff" stroke-width="1.5">
+          <path d="M4 20 L9 12 L14 16 L18 8 L22 14"/>
+          <circle cx="9" cy="12" r="2" fill="#3fd0ff" fill-opacity="0.3"/>
+          <circle cx="18" cy="8" r="2" fill="#3fd0ff" fill-opacity="0.3"/>
+        </svg>
+      </div>
+      <h3 class="card-h">The Scale of the Crisis</h3>
+      <p class="card-p">Over 55 million people live with dementia globally. Without early detection, progression goes unnoticed for years — costing lives, families, and healthcare systems enormously.</p>
+    </div>
+
+    <div class="neuro-card reveal" style="transition-delay:0.3s">
+      <div class="card-num">// 03</div>
+      <div class="card-icon-wrap">
+        <svg viewBox="0 0 26 26" fill="none" stroke="#3fd0ff" stroke-width="1.5">
+          <rect x="5" y="5" width="16" height="16" rx="2"/>
+          <path d="M5 13 H21" stroke-dasharray="3 2"/>
+          <path d="M13 5 V21" stroke-dasharray="3 2"/>
+          <circle cx="13" cy="13" r="3" fill="#3fd0ff" fill-opacity="0.2"/>
+        </svg>
+      </div>
+      <h3 class="card-h">Why MRI is the Key</h3>
+      <p class="card-p">MRI scans reveal hippocampal atrophy and cortical thinning — structural biomarkers that signal Alzheimer's onset years before symptoms emerge clinically. AI makes this detection instant.</p>
+    </div>
+
+    <div class="neuro-card wide reveal" style="transition-delay:0.15s">
+      <div>
+        <div class="card-num">// 04 — Critical Window</div>
+        <h3 class="card-h">The Detection Gap</h3>
+        <p class="card-p">Current average diagnosis delay is 2–3 years from onset. NeuroShield AI closes this gap — providing neurologists with probabilistic confidence scores across 4 disease stages from a single MRI scan upload.</p>
+      </div>
+      <div class="wide-stat">
+        <span class="wide-stat-num">2–3yr</span>
+        <span class="wide-stat-label">Average diagnosis delay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="s-divider"></div>
+
+<!-- HOW IT WORKS -->
+<div id="how-it-works" class="pipeline-section">
+  <div class="pipeline-inner">
+    <div class="reveal">
+      <div class="s-tag">02 — The AI Pipeline</div>
+      <h2 class="s-title">How <span class="hl">NeuroShield</span> Works</h2>
+      <p class="s-desc">A five-stage clinical AI workflow — from secure MRI upload to explainable deep learning output and doctor-confirmed diagnosis.</p>
+    </div>
+
+    <div class="pipeline-track">
+      <div class="track-spine"></div>
+      <div class="track-glow"></div>
+
+      <div class="step">
+        <div class="step-node"><div class="step-dot-outer"><div class="step-dot-inner"></div></div></div>
+        <div class="step-body">
+          <div class="step-code">Step 01 — Input</div>
+          <div class="step-h">Secure MRI Upload</div>
+          <p class="step-p">Neurologist uploads DICOM or NIfTI brain MRI through an encrypted, HIPAA-compliant portal. Instant queue assignment and transmission confirmation.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-node"><div class="step-dot-outer"><div class="step-dot-inner"></div></div></div>
+        <div class="step-body">
+          <div class="step-code">Step 02 — Preprocessing</div>
+          <div class="step-h">Medical-Grade Normalization</div>
+          <p class="step-p">Skull stripping, bias field correction, and spatial normalization to MNI atlas — ensuring consistent input quality regardless of scanner or acquisition protocol.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-node"><div class="step-dot-outer"><div class="step-dot-inner"></div></div></div>
+        <div class="step-body">
+          <div class="step-code">Step 03 — Inference</div>
+          <div class="step-h">ResNet50 / EfficientNet Analysis</div>
+          <p class="step-p">Our ensemble deep learning model analyzes hippocampal volume, cortical thickness, and white matter patterns — trained on 10,000+ annotated scans across all 4 disease stages.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-node"><div class="step-dot-outer"><div class="step-dot-inner"></div></div></div>
+        <div class="step-body">
+          <div class="step-code">Step 04 — Explainability</div>
+          <div class="step-h">Grad-CAM Heatmap + Confidence Report</div>
+          <p class="step-p">A probabilistic confidence score and spatial heatmap highlight regions driving the prediction — explainable AI that builds clinical trust and supports radiologist review.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-node"><div class="step-dot-outer"><div class="step-dot-inner"></div></div></div>
+        <div class="step-body">
+          <div class="step-code">Step 05 — Clinical Action</div>
+          <div class="step-h">Doctor Reviews, Confirms & Acts</div>
+          <p class="step-p">The report is saved to the patient profile. Neurologist adds notes, confirms or overrides the AI decision, and shares the final diagnosis — complete audit trail maintained.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="s-divider"></div>
+
+<!-- SCAN DEMO -->
+<div id="scan-demo" class="scan-section">
+  <div class="reveal">
+    <div class="s-tag">03 — Live Inference</div>
+    <h2 class="s-title">Sample <span class="hl">Analysis</span> Output</h2>
+    <p class="s-desc">Real-time visualization of how NeuroShield AI processes an MRI scan and generates a multi-stage confidence report for clinical decision-making.</p>
+  </div>
+
+  <div class="scan-layout">
+    <div class="scan-visual reveal-left">
+      <div class="scan-ring"></div>
+      <div class="scan-ring"></div>
+      <div class="scan-ring"></div>
+      <div class="scan-center">
+        <div class="scan-brain-emoji">🧠</div>
+      </div>
+      <div class="scan-sweep">
+        <div class="scan-line-sweep"></div>
+      </div>
+      <div class="scan-data-points">
+        <div class="data-dot" style="top:28%;left:45%;animation-delay:0s"></div>
+        <div class="data-dot" style="top:42%;left:30%;animation-delay:0.5s"></div>
+        <div class="data-dot" style="top:55%;left:62%;animation-delay:1s"></div>
+        <div class="data-dot" style="top:38%;left:70%;animation-delay:1.5s"></div>
+        <div class="data-dot" style="top:64%;left:38%;animation-delay:0.8s"></div>
+        <div class="data-dot" style="top:22%;left:58%;animation-delay:1.2s"></div>
+      </div>
+    </div>
+
+    <div class="result-panel reveal-right">
+      <div class="result-header">// Patient NS-00421 — Alzheimer's Stage Classification</div>
+
+      <div class="result-stage">
+        <span class="r-label">Non-Demented</span>
+        <div class="r-bar-wrap"><div class="r-bar safe" style="width:8%"></div></div>
+        <span class="r-pct">8%</span>
+      </div>
+      <div class="result-stage">
+        <span class="r-label">Very Mild</span>
+        <div class="r-bar-wrap"><div class="r-bar cyan" style="width:15%;animation-delay:0.2s"></div></div>
+        <span class="r-pct">15%</span>
+      </div>
+      <div class="result-stage">
+        <span class="r-label">Mild Dementia</span>
+        <div class="r-bar-wrap"><div class="r-bar mild" style="width:62%;animation-delay:0.4s"></div></div>
+        <span class="r-pct" style="color:#ffcc44">62%</span>
+      </div>
+      <div class="result-stage">
+        <span class="r-label">Moderate</span>
+        <div class="r-bar-wrap"><div class="r-bar warn" style="width:15%;animation-delay:0.6s"></div></div>
+        <span class="r-pct" style="color:#ff4444">15%</span>
+      </div>
+
+      <div class="diagnosis-box">
+        <div class="dx-tag">⚠ Diagnosis: Mild Cognitive Impairment Detected</div>
+        <p class="dx-desc">Hippocampal volume reduction of 12.4% detected. Cortical thinning observed in the entorhinal cortex and precuneus. Clinical confirmation and follow-up MRI in 6 months recommended.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="s-divider"></div>
+
+<!-- TECH STACK -->
+<div class="tech-section">
+  <div class="tech-inner">
+    <div class="reveal">
+      <div class="s-tag">04 — Technology</div>
+      <h2 class="s-title">The <span class="hl">Stack</span> Behind It</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-pill reveal" style="transition-delay:0s">
+        <div class="tech-icon-wrap"><span class="tech-icon">⚛️</span></div>
+        <div class="tech-name">React</div>
+        <div class="tech-sub">Frontend</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.08s">
+        <div class="tech-icon-wrap"><span class="tech-icon">🐍</span></div>
+        <div class="tech-name">Flask</div>
+        <div class="tech-sub">Backend API</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.16s">
+        <div class="tech-icon-wrap"><span class="tech-icon">🧠</span></div>
+        <div class="tech-name">TensorFlow</div>
+        <div class="tech-sub">Deep Learning</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.24s">
+        <div class="tech-icon-wrap"><span class="tech-icon">🔬</span></div>
+        <div class="tech-name">ResNet50</div>
+        <div class="tech-sub">Model Architecture</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.32s">
+        <div class="tech-icon-wrap"><span class="tech-icon">🗺️</span></div>
+        <div class="tech-name">Grad-CAM</div>
+        <div class="tech-sub">Explainability</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.4s">
+        <div class="tech-icon-wrap"><span class="tech-icon">🐘</span></div>
+        <div class="tech-name">Supabase</div>
+        <div class="tech-sub">Database</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.48s">
+        <div class="tech-icon-wrap"><span class="tech-icon">🎨</span></div>
+        <div class="tech-name">Three.js</div>
+        <div class="tech-sub">3D Visualization</div>
+      </div>
+      <div class="tech-pill reveal" style="transition-delay:0.56s">
+        <div class="tech-icon-wrap"><span class="tech-icon">📄</span></div>
+        <div class="tech-name">PDF Reports</div>
+        <div class="tech-sub">Clinical Output</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="s-divider"></div>
+
+<!-- TEAM -->
+<div id="team" class="team-section">
+  <div class="reveal">
+    <div class="s-tag">05 — The Builders</div>
+    <h2 class="s-title">Meet the <span class="hl">Team</span></h2>
+    <p class="s-desc">Six minds. One mission — to make early Alzheimer's detection accessible to every neurologist on the planet.</p>
+  </div>
+  <div class="team-grid">
+    <div class="team-card reveal" style="transition-delay:0s">
+      <div class="t-avatar-wrap">
+        <div class="t-glow"></div>
+        <div class="t-avatar"><div class="t-inner">👨‍💻</div></div>
+      </div>
+      <div class="t-name">Developer 01</div>
+      <div class="t-role">ML Engineer</div>
+      <div class="t-divider"></div>
+      <p class="t-desc">Architected the ResNet50/EfficientNet ensemble and Grad-CAM explainability pipeline.</p>
+    </div>
+    <div class="team-card reveal" style="transition-delay:0.08s">
+      <div class="t-avatar-wrap">
+        <div class="t-glow"></div>
+        <div class="t-avatar"><div class="t-inner">👩‍⚕️</div></div>
+      </div>
+      <div class="t-name">Developer 02</div>
+      <div class="t-role">Backend Lead</div>
+      <div class="t-divider"></div>
+      <p class="t-desc">Built the Flask API, HIPAA-compliant MRI pipeline, and Supabase patient data layer.</p>
+    </div>
+    <div class="team-card reveal" style="transition-delay:0.16s">
+      <div class="t-avatar-wrap">
+        <div class="t-glow"></div>
+        <div class="t-avatar"><div class="t-inner">🎨</div></div>
+      </div>
+      <div class="t-name">Developer 03</div>
+      <div class="t-role">Frontend Dev</div>
+      <div class="t-divider"></div>
+      <p class="t-desc">Crafted the React dashboard, doctor workflow UX, and 3D neural visualization system.</p>
+    </div>
+    <div class="team-card reveal" style="transition-delay:0.24s">
+      <div class="t-avatar-wrap">
+        <div class="t-glow"></div>
+        <div class="t-avatar"><div class="t-inner">🔬</div></div>
+      </div>
+      <div class="t-name">Developer 04</div>
+      <div class="t-role">UI/UX Designer</div>
+      <div class="t-divider"></div>
+      <p class="t-desc">Designed the clinical interface system, brand language, and patient report templates.</p>
+    </div>
+    <div class="team-card reveal" style="transition-delay:0.32s">
+      <div class="t-avatar-wrap">
+        <div class="t-glow"></div>
+        <div class="t-avatar"><div class="t-inner">🧬</div></div>
+      </div>
+      <div class="t-name">Developer 05</div>
+      <div class="t-role">Data Engineer</div>
+      <div class="t-divider"></div>
+      <p class="t-desc">Curated the 10,000+ MRI training dataset and built the preprocessing normalization pipeline.</p>
+    </div>
+    <div class="team-card reveal" style="transition-delay:0.4s">
+      <div class="t-avatar-wrap">
+        <div class="t-glow"></div>
+        <div class="t-avatar"><div class="t-inner">🛡️</div></div>
+      </div>
+      <div class="t-name">Developer 06</div>
+      <div class="t-role">Security & DevOps</div>
+      <div class="t-divider"></div>
+      <p class="t-desc">Handled encryption, HIPAA compliance, CI/CD deployment, and cloud infrastructure scaling.</p>
+    </div>
+  </div>
+</div>
+
+<div class="s-divider"></div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-glow-ring"></div>
+  <div class="cta-glow-ring"></div>
+  <div class="cta-glow-ring"></div>
+  <div class="cta-inner reveal">
+    <span class="cta-pre">// Start the Journey</span>
+    <h2 class="cta-headline">Start Brain Scan.<br>Save a Life.</h2>
+    <p class="cta-sub">Deploy NeuroShield AI in your neurology department. Request early access and join the future of Alzheimer's diagnostics.</p>
+    <button class="btn-primary-xl">Start Brain Scan</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">NEUROSHIELD AI</div>
+  <div class="f-center"><p class="f-copy">© 2025 NeuroShield AI — Built for neurologists, powered by deep learning</p></div>
+  <div class="f-right">Navigate the Mind. Detect the Unseen.</div>
+</footer>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── THREE.JS — REAL MICROSCOPE NEURONS ──────────────────────────────────────
+const canvas = document.getElementById('brain-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+// Wider FOV + camera much closer so neurons fill the screen naturally
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+camera.position.set(0, 0, 38);
+
+// ── CANVAS TEXTURE: soft circular soma (neuron cell body) ──
+function makeSomaTexture(innerColor, outerColor, size = 256) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const r = size / 2;
+  const grad = ctx.createRadialGradient(r, r, 0, r, r, r);
+  grad.addColorStop(0,    innerColor);
+  grad.addColorStop(0.3,  innerColor);
+  grad.addColorStop(0.6,  outerColor);
+  grad.addColorStop(1,    'rgba(0,0,0,0)');
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(r, r, r, 0, Math.PI * 2);
+  ctx.fill();
+  return new THREE.CanvasTexture(c);
+}
+
+// Three soma types — varied brightness like real stained neurons
+const somaTex1 = makeSomaTexture('rgba(120,240,255,1)',  'rgba(20,140,220,0)',  256);
+const somaTex2 = makeSomaTexture('rgba(200,255,255,1)',  'rgba(50,190,240,0)',  256);
+const somaTex3 = makeSomaTexture('rgba(80,210,255,0.95)','rgba(10,70,160,0)',   128);
+
+// ── NEURON POSITIONS — spread wide to fill the viewport ──
+// Radius 55 at camera z=38 means neurons span well beyond edges = immersive
+const N = 70;
+const somaPositions = [];
+for (let i = 0; i < N; i++) {
+  const theta = Math.random() * Math.PI * 2;
+  const phi   = Math.acos(2 * Math.random() - 1);
+  // Push more neurons toward z=0 plane so they're close and large on screen
+  const r = 55 * Math.pow(Math.random(), 0.5);
+  somaPositions.push(new THREE.Vector3(
+    r * Math.sin(phi) * Math.cos(theta) * 1.3,
+    r * Math.sin(phi) * Math.sin(theta) * 0.95,
+    r * Math.cos(phi) * 0.5   // flatten Z so they spread across screen width
+  ));
+}
+
+// ── SOMA SPRITES — round, soft, glowing, BIG ──
+const somaMeshes = [];
+somaPositions.forEach((pos, i) => {
+  // Scale 2.5–5.5 in world units — at z=38 camera these are clearly visible round blobs
+  const scale = 2.5 + Math.random() * 3.0;
+  const tex   = [somaTex1, somaTex2, somaTex3][Math.floor(Math.random() * 3)];
+  const mat   = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    opacity: 0.40 + Math.random() * 0.15,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    color: new THREE.Color().setHSL(0.52 + Math.random() * 0.07, 1.0, 0.72)
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.copy(pos);
+  sprite.scale.set(scale, scale, 1);
+  scene.add(sprite);
+  somaMeshes.push({ sprite, mat, baseScale: scale, phase: Math.random() * Math.PI * 2 });
+});
+
+// ── DENDRITE BUILDER ──
+// Recursive branching arms — like real multipolar neurons
+function makeDendrites(origin, parentDir, depth, branchLen, group) {
+  if (depth <= 0 || branchLen < 0.5) return;
+
+  const numBranches = depth === 3 ? (2 + Math.floor(Math.random() * 3)) : (1 + Math.floor(Math.random() * 2));
+
+  for (let b = 0; b < numBranches; b++) {
+    // Deviate from parent direction
+    const angle1 = (Math.random() - 0.5) * 1.4;
+    const angle2 = (Math.random() - 0.5) * 1.4;
+
+    // Build a perpendicular and rotate
+    const perp = new THREE.Vector3(
+      -parentDir.y + (Math.random()-0.5)*0.5,
+       parentDir.x + (Math.random()-0.5)*0.5,
+      (Math.random() - 0.5) * 0.8
+    ).normalize();
+
+    const dir = parentDir.clone()
+      .applyAxisAngle(perp, angle1)
+      .applyAxisAngle(new THREE.Vector3(0,0,1), angle2 * 0.3)
+      .normalize();
+
+    const segLen   = branchLen * (0.55 + Math.random() * 0.45);
+    const tipPoint = origin.clone().addScaledVector(dir, segLen);
+
+    // Taper: deeper branches thinner — faded so text stays readable
+    const alpha = 0.07 + (depth / 3) * 0.13;
+    const alphaEnd = alpha * 0.25;
+
+    const pts = [origin.clone(), tipPoint.clone()];
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+
+    // Per-vertex color for taper effect
+    const vColors = new Float32Array(6);
+    const hue = 0.52 + Math.random() * 0.1;
+    const c1 = new THREE.Color().setHSL(hue, 0.9, alpha * 2.5);
+    const c2 = new THREE.Color().setHSL(hue, 0.8, alphaEnd * 2.5);
+    vColors[0] = c1.r; vColors[1] = c1.g; vColors[2] = c1.b;
+    vColors[3] = c2.r; vColors[4] = c2.g; vColors[5] = c2.b;
+    geo.setAttribute('color', new THREE.BufferAttribute(vColors, 3));
+
+    const mat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      linewidth: 1
+    });
+    const line = new THREE.Line(geo, mat);
+    group.add(line);
+
+    makeDendrites(tipPoint, dir, depth - 1, segLen * 0.65, group);
+  }
+}
+
+// ── BUILD NEURONS (soma + dendrites) as a single group ──
+const brainGroup = new THREE.Group();
+scene.add(brainGroup);
+
+// Add sprites to group too so they rotate together
+somaMeshes.forEach(s => {
+  brainGroup.add(s.sprite);
+});
+
+somaPositions.forEach((pos, i) => {
+  // Each neuron gets 3–6 primary dendrite arms
+  const numArms = 3 + Math.floor(Math.random() * 4);
+  for (let arm = 0; arm < numArms; arm++) {
+    const dir = new THREE.Vector3(
+      Math.random() - 0.5,
+      Math.random() - 0.5,
+      Math.random() - 0.5
+    ).normalize();
+    // Scaled up: 8–16 units long at first level (was 3.5–6.5)
+    makeDendrites(pos, dir, 3, 8 + Math.random() * 8, brainGroup);
+  }
+
+  // One long axon on some neurons
+  if (Math.random() > 0.4) {
+    const axonDir = new THREE.Vector3(
+      Math.random() - 0.5,
+      Math.random() - 0.5,
+      Math.random() - 0.5
+    ).normalize();
+    // Axon: 14–22 units long
+    makeDendrites(pos, axonDir, 2, 14 + Math.random() * 8, brainGroup);
+  }
+});
+
+// ── AMBIENT BACKGROUND PARTICLES (neural space dust, also round) ──
+const dustTex = makeSomaTexture('rgba(50,180,255,0.8)', 'rgba(0,80,160,0)', 32);
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(400 * 3);
+for (let i = 0; i < 400; i++) {
+  dustPos[i*3]   = (Math.random()-0.5)*300;
+  dustPos[i*3+1] = (Math.random()-0.5)*220;
+  dustPos[i*3+2] = (Math.random()-0.5)*300;
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dustMat = new THREE.PointsMaterial({
+  map: dustTex,
+  size: 1.2,
+  transparent: true,
+  opacity: 0.35,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  sizeAttenuation: true
+});
+const dust = new THREE.Points(dustGeo, dustMat);
+scene.add(dust);
+
+// ── SYNAPTIC PULSE — glowing round spark travelling axons ──
+const pulseTex = makeSomaTexture('rgba(255,255,255,1)', 'rgba(100,240,255,0)', 64);
+
+// Gather all dendrite line segments for pulse travel
+const allSegments = [];
+brainGroup.children.forEach(child => {
+  if (child.isLine) {
+    const pos = child.geometry.attributes.position;
+    if (pos.count >= 2) {
+      allSegments.push({
+        a: new THREE.Vector3(pos.getX(0), pos.getY(0), pos.getZ(0)),
+        b: new THREE.Vector3(pos.getX(1), pos.getY(1), pos.getZ(1))
+      });
+    }
+  }
+});
+
+const PULSES = 18;
+const pulseSprites = [];
+const pulseData = [];
+
+for (let k = 0; k < PULSES; k++) {
+  const pMat = new THREE.SpriteMaterial({
+    map: pulseTex,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    color: new THREE.Color(0.6, 1.0, 1.0)
+  });
+  const sprite = new THREE.Sprite(pMat);
+  const sc = 1.5 + Math.random() * 2.0;  // bigger pulses visible at scale
+  sprite.scale.set(sc, sc, 1);
+  brainGroup.add(sprite);
+  pulseSprites.push({ sprite, mat: pMat });
+  const seg = allSegments[Math.floor(Math.random() * allSegments.length)];
+  pulseData.push({ seg, t: Math.random(), speed: 0.012 + Math.random() * 0.022 });
+}
+
+// ── SCROLL & MOUSE ──
+let targetCamZ = 38;
+let camX = 0, camY = 0;
+
+window.addEventListener('scroll', () => {
+  const maxScroll = document.body.scrollHeight - window.innerHeight;
+  const p = Math.min(window.scrollY / maxScroll, 1);
+  // From z=38 (outside, neurons fill screen) fly through to z=-30 (deep inside)
+  targetCamZ = 38 - p * 68;
+});
+
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+  mouseX = (e.clientX / window.innerWidth  - 0.5) * 2;
+  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ── ANIMATION LOOP ──
+let t = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  t += 0.008;
+
+  // Rotate whole brain group (dendrites + somas move together)
+  brainGroup.rotation.y += 0.0007;
+  brainGroup.rotation.x += 0.00025;
+  dust.rotation.y += 0.00015;
+
+  // Camera fly-through on scroll
+  camera.position.z += (targetCamZ - camera.position.z) * 0.032;
+
+  // Mouse parallax — gentler at close range
+  camX += (mouseX * 6 - camX) * 0.022;
+  camY += (-mouseY * 4 - camY) * 0.022;
+  camera.position.x = camX;
+  camera.position.y = camY;
+
+  // Soma breathing — dimmer so content stays readable
+  somaMeshes.forEach(({ sprite, mat, baseScale, phase }) => {
+    const breath = 1 + Math.sin(t * 1.2 + phase) * 0.10;
+    const s = baseScale * breath;
+    sprite.scale.set(s, s, 1);
+    mat.opacity = 0.30 + Math.sin(t * 0.9 + phase) * 0.12;
+  });
+
+  // Pulse travel along dendrite branches
+  pulseData.forEach((pd, k) => {
+    pd.t += pd.speed;
+    if (pd.t >= 1) {
+      pd.t = 0;
+      pd.seg = allSegments[Math.floor(Math.random() * allSegments.length)];
+      // Randomise color: sometimes warm yellow (action potential)
+      const warm = Math.random() > 0.7;
+      pulseSprites[k].mat.color.setHSL(warm ? 0.13 : 0.52, 1.0, 0.85);
+    }
+    const { a, b } = pd.seg;
+    pulseSprites[k].sprite.position.lerpVectors(a, b, pd.t);
+    // Fade in/out at ends
+    const fade = Math.sin(pd.t * Math.PI);
+    pulseSprites[k].mat.opacity = fade * 0.55;
+  });
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── CUSTOM CURSOR ──────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const trail  = document.getElementById('cursor-trail');
+let cx = 0, cy = 0, tx = 0, ty = 0;
+
+document.addEventListener('mousemove', e => {
+  cx = e.clientX; cy = e.clientY;
+  cursor.style.left = cx + 'px';
+  cursor.style.top  = cy + 'px';
+});
+
+function animTrail() {
+  tx += (cx - tx) * 0.18;
+  ty += (cy - ty) * 0.18;
+  trail.style.left = tx + 'px';
+  trail.style.top  = ty + 'px';
+  requestAnimationFrame(animTrail);
+}
+animTrail();
+
+document.querySelectorAll('button, a, .neuro-card, .tech-pill, .team-card').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(2.5)';
+    cursor.style.background = 'var(--cyan-glow)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+    cursor.style.background = 'var(--cyan)';
+  });
+});
+
+// ─── NAV SCROLL STYLE ──────────────────────────────────────────────────────
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ─── INTERSECTION OBSERVER ─────────────────────────────────────────────────
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .step').forEach(el => obs.observe(el));
+
+// ─── FLOATING PARTICLES ────────────────────────────────────────────────────
+const particleContainer = document.getElementById('particles');
+for (let i = 0; i < 35; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.animationDuration = (8 + Math.random() * 16) + 's';
+  p.style.animationDelay = (Math.random() * 12) + 's';
+  p.style.opacity = 0;
+  particleContainer.appendChild(p);
+}
+</script>
+</body>
+</html>
