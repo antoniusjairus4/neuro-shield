@@ -1,4 +1,4 @@
-# NeuroScan AI 🧠
+NeuroScan AI 🧠
 
 > Multimodal Early Alzheimer's Detection Platform using Deep Learning
 
@@ -76,7 +76,7 @@ Blood Tests → XGBoost ──────────┘
 | Database | PostgreSQL + MinIO (planned) |
 
 ## Team
-Built by a 6-member team from Sri Krishna College of Engineering and Technology, Coimbatore.
+Built by a 6-member team from Sri Krishna College of Engineering and Technology, Coimbatore. Members are Antonius Jairus, Dhanya Shri, Sweatha, Sharukesh, Noorul, Hariharasudhan.
 
 ## License
 Research use only. ADNI data subject to ADNI data use agreement.
