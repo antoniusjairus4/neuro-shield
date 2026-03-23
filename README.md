@@ -56,7 +56,6 @@ Blood Tests → XGBoost ──────────┘
 - **Kaggle** Alzheimer's MRI datasets
 
 ## Model Performance (v0.2)
-| Metric | Score |
 |--------|-------|
 | Test Accuracy | 42% (limited by small unique patient count) |
 | Test AUC | 0.64 |
