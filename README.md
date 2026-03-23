@@ -11,7 +11,6 @@ Every existing tool uses a single modality. NeuroScan AI fuses three:
 | Modality | What It Detects | Stage |
 |----------|----------------|-------|
 | Blood Biomarkers (p-tau, Aβ42/40) | Amyloid buildup | Preclinical |
-| Amyloid PET | Plaque deposits | Preclinical → EMCI |
 | MRI (T1 MPRAGE) | Brain atrophy | EMCI → AD |
 
 ## Architecture
