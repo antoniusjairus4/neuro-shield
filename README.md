@@ -54,13 +54,6 @@ Blood Tests → XGBoost ──────────┘
 - **OASIS-3** — pending registration
 - **Kaggle** Alzheimer's MRI datasets
 
-## Model Performance (v0.2)
-|--------|-------|
-| Test Accuracy | 42% (limited by small unique patient count) |
-| Test AUC | 0.64 |
-| Training Data | 137 unique patients (65 AD + 72 CN) |
-| Architecture | EfficientNetB4 + Dense layers |
-
 ## Tech Stack
 | Component | Technology |
 |-----------|-----------|
