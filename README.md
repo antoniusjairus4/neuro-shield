@@ -76,7 +76,7 @@ Blood Tests → XGBoost ──────────┘
 | Database | PostgreSQL + MinIO (planned) |
 
 ## Team
-Built by a 6-member team from Sri Krishna College of Engineering and Technology, Coimbatore. Members are Antonius Jairus, Dhanya Shri, Sweatha, Sharukesh, Noorul, Hariharasudhan.
+Built by a 6-member team from Sri Krishna College of Engineering and Technology, Coimbatore. Members are Antonius Jairus, Dhanya Shri, Sweatha, Sharukesh, Noorul Hamdh, Hariharasudhan.
 
 ## License
 Research use only. ADNI data subject to ADNI data use agreement.
