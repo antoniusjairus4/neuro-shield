@@ -72,7 +72,9 @@ Built by a 6-member team from Sri Krishna College of Engineering and Technology,
 Roles:
 Antonius Jairus R & Dhanya Shree -> Training the Model 
 Sharukesh & Swetha -> Database and the backend 
-
+Mohammed Noorul Hamdh -> Fusion layer of the models
+Hariharasudhan -> Rnd work.
 
 ## License
 Research use only. ADNI data subject to ADNI data use agreement.
+
