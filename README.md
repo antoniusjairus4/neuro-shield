@@ -52,7 +52,7 @@ Blood Tests → XGBoost ──────────┘
 ## Dataset
 - **ADNI** (Alzheimer's Disease Neuroimaging Initiative) — approved access
 - **OASIS-3** — pending registration
-- **Kaggle** Alzheimer's MRI datasets
+- **Kaggle** Alzheimer's MRI datasets.
 
 ## Tech Stack
 | Component | Technology |
