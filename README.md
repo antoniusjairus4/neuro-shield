@@ -69,5 +69,10 @@ Blood Tests → XGBoost ──────────┘
 ## Team
 Built by a 6-member team from Sri Krishna College of Engineering and Technology, Coimbatore. Members are Antonius Jairus, Dhanya Shri, Sweatha, Sharukesh, Noorul Hamdh, Hariharasudhan.
 
+Roles:
+Antonius Jairus R & Dhanya Shree -> Training the Model 
+Sharukesh & Swetha -> Database and the backend 
+
+
 ## License
 Research use only. ADNI data subject to ADNI data use agreement.
